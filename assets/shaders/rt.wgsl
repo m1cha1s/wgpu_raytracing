@@ -16,7 +16,6 @@ struct HitRecord {
     normal: vec3<f32>,
     t: f32,
     hit: bool,
-    front_face: bool,
 }
 
 fn hash(value: u32) -> u32 {
@@ -36,12 +35,12 @@ fn randomFloat(value: u32) -> f32 {
 
 fn hitSphere(sphere: Sphere, ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
     let oc = ray.origin - sphere.center;
-    let a = length(ray.direction);
-    let b = 2.0 * dot(oc, ray.direction);
-    let c = length(oc) - sphere.radius * sphere.radius;
-    let discriminant = b * b - 4.0 * a * c;
+    let a = dot(ray.direction, ray.direction);
+    let half_b = dot(oc, ray.direction);
+    let c = dot(oc, oc) - sphere.radius * sphere.radius;
+    let discriminant = half_b * half_b - a * c;
 
-    let miss = HitRecord(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(0.0, 0.0, 0.0), 0.0, false, false);
+    let miss = HitRecord(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(0.0, 0.0, 0.0), 0.0, false);
 
     if discriminant < 0.0 {
         return miss;
@@ -49,32 +48,29 @@ fn hitSphere(sphere: Sphere, ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
 
     let sqrtd = sqrt(discriminant);
 
-    let halfb = b / 2.0;
 
-    var root = (-halfb - sqrtd) / a;
+    var root = (-half_b - sqrtd) / a;
     if root < t_min || t_max < root {
-        root = (-halfb + sqrtd) / a;
+        root = (-half_b + sqrtd) / a;
         if root < t_min || t_max < root {
             return miss;
         }
     }
 
-    var outward_normal = (ray.direction * root - sphere.center) / sphere.radius;
+    let outward_normal = ((ray.origin + (ray.direction * root)) - sphere.center) / sphere.radius;
 
     let front_face = dot(ray.direction, outward_normal) < 0.0;
 
-    var normal: vec3<f32>;
+    var normal = -outward_normal;
     if front_face {
         normal = outward_normal;
-    } else {
-        normal = -outward_normal;
     }
 
-    return HitRecord(ray.direction * root, normal, root, true, front_face);
+    return HitRecord(ray.origin + (ray.direction * root), normal, root, true);
 }
 
 fn rayColor(ray: Ray) -> vec4<f32> {
-    var hit = hitSphere(Sphere(vec3<f32>(0.0, 0.0, -1.0), 0.5), ray, 0.0, 9999999.0);
+    var hit = hitSphere(Sphere(vec3<f32>(0.0, 0.0, -1.0), 0.5), ray, 0.01, 999999999999.0);
     if hit.hit {
         let c = 0.5 * (hit.normal + vec3<f32>(1.0, 1.0, 1.0));
         return vec4<f32>(c.xyz, 1.0);
