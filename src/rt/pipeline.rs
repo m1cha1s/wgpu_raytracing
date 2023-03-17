@@ -30,7 +30,7 @@ impl FromWorld for RtPipeline {
                         binding: 0,
                         visibility: ShaderStages::COMPUTE,
                         ty: BindingType::StorageTexture {
-                            access: StorageTextureAccess::ReadWrite,
+                            access: StorageTextureAccess::WriteOnly,
                             format: TextureFormat::Rgba8Unorm,
                             view_dimension: TextureViewDimension::D2,
                         },
