@@ -1,16 +1,18 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, mem::size_of, num::NonZeroU64};
 
 use bevy::{
     prelude::{AssetServer, FromWorld, Resource},
     render::{
         render_resource::{
             BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
-            CachedComputePipelineId, ComputePipelineDescriptor, PipelineCache, ShaderStages,
-            StorageTextureAccess, TextureFormat, TextureViewDimension,
+            BufferBindingType, BufferSize, CachedComputePipelineId, ComputePipelineDescriptor,
+            PipelineCache, ShaderStages, StorageTextureAccess, TextureFormat, TextureViewDimension,
         },
         renderer::RenderDevice,
     },
 };
+
+use super::sphere::{ExtractedSpheres, Sphere};
 
 #[derive(Resource)]
 pub struct RtPipeline {
@@ -26,16 +28,30 @@ impl FromWorld for RtPipeline {
                 .resource::<RenderDevice>()
                 .create_bind_group_layout(&BindGroupLayoutDescriptor {
                     label: None,
-                    entries: &[BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: ShaderStages::COMPUTE,
-                        ty: BindingType::StorageTexture {
-                            access: StorageTextureAccess::WriteOnly,
-                            format: TextureFormat::Rgba8Unorm,
-                            view_dimension: TextureViewDimension::D2,
+                    entries: &[
+                        BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: ShaderStages::COMPUTE,
+                            ty: BindingType::StorageTexture {
+                                access: StorageTextureAccess::WriteOnly,
+                                format: TextureFormat::Rgba8Unorm,
+                                view_dimension: TextureViewDimension::D2,
+                            },
+                            count: None,
                         },
-                        count: None,
-                    }],
+                        BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: ShaderStages::COMPUTE,
+                            ty: BindingType::Buffer {
+                                ty: BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: BufferSize::new(
+                                    size_of::<ExtractedSpheres>() as u64
+                                ),
+                            },
+                            count: None,
+                        },
+                    ],
                 });
 
         let shader = world.resource::<AssetServer>().load("shaders/rt.wgsl");

@@ -12,8 +12,12 @@ struct Sphere {
 }
 
 struct Spheres {
+    sphere_count: u32,
     spheres: array<Sphere>,
 }
+
+@group(0) @binding(1)
+var<storage, read> spheres: Spheres;
 
 struct HitRecord {
     p: vec3<f32>,
@@ -73,13 +77,11 @@ fn hitSphere(sphere: Sphere, ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
     return HitRecord(ray.origin + (ray.direction * root), normal, root, true);
 }
 
-fn hitSpheres(spheres: Spheres, ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
+fn hitSpheres(ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
     var temp_rec = HitRecord(vec3<f32>(0.0), vec3<f32>(0.0), 0.0, false);
     var closest_so_far = t_max;
 
-    var sp = &spheres.spheres;
-
-    for (var sphere_idx: u32 = 0u; sphere_idx < arrayLength(sp); sphere_idx ++) {
+    for (var sphere_idx: u32 = 0u; sphere_idx < spheres.sphere_count; sphere_idx ++) {
         let hit = hitSphere(spheres.spheres[sphere_idx], ray, t_min, closest_so_far);
         if hit.hit {
             temp_rec.hit = true;
@@ -92,7 +94,7 @@ fn hitSpheres(spheres: Spheres, ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
 }
 
 fn rayColor(ray: Ray) -> vec4<f32> {
-    var hit = hitSpheres(Spheres(array(Sphere(vec3<f32>(0.0, 0.0, -1.0), 0.5), Sphere(vec3<f32>(0.0, -100.5, -1.0), 100))), ray, 0.01, 999999999999.0);
+    var hit = hitSpheres(ray, 0.01, 999999999999.0);
     if hit.hit {
         let c = 0.5 * (hit.normal + vec3<f32>(1.0, 1.0, 1.0));
         return vec4<f32>(c.xyz, 1.0);

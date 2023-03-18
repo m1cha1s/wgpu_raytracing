@@ -19,6 +19,7 @@ pub mod node;
 pub mod pipeline;
 pub mod plugin;
 pub mod state;
+pub mod sphere;
 
 pub fn queue_bind_group(
     mut commands: Commands,
