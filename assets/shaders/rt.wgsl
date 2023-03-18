@@ -11,6 +11,10 @@ struct Sphere {
     radius: f32,
 }
 
+struct Spheres {
+    spheres: array<Sphere>,
+}
+
 struct HitRecord {
     p: vec3<f32>,
     normal: vec3<f32>,
@@ -69,8 +73,26 @@ fn hitSphere(sphere: Sphere, ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
     return HitRecord(ray.origin + (ray.direction * root), normal, root, true);
 }
 
+fn hitSpheres(spheres: Spheres, ray: Ray, t_min: f32, t_max: f32) -> HitRecord {
+    var temp_rec = HitRecord(vec3<f32>(0.0), vec3<f32>(0.0), 0.0, false);
+    var closest_so_far = t_max;
+
+    var sp = &spheres.spheres;
+
+    for (var sphere_idx: u32 = 0u; sphere_idx < arrayLength(sp); sphere_idx ++) {
+        let hit = hitSphere(spheres.spheres[sphere_idx], ray, t_min, closest_so_far);
+        if hit.hit {
+            temp_rec.hit = true;
+            closest_so_far = hit.t;
+            temp_rec = hit;
+        }
+    }
+
+    return temp_rec;
+}
+
 fn rayColor(ray: Ray) -> vec4<f32> {
-    var hit = hitSphere(Sphere(vec3<f32>(0.0, 0.0, -1.0), 0.5), ray, 0.01, 999999999999.0);
+    var hit = hitSpheres(Spheres(array(Sphere(vec3<f32>(0.0, 0.0, -1.0), 0.5), Sphere(vec3<f32>(0.0, -100.5, -1.0), 100))), ray, 0.01, 999999999999.0);
     if hit.hit {
         let c = 0.5 * (hit.normal + vec3<f32>(1.0, 1.0, 1.0));
         return vec4<f32>(c.xyz, 1.0);
@@ -80,7 +102,7 @@ fn rayColor(ray: Ray) -> vec4<f32> {
     return (1.0 - t) * vec4<f32>(1.0, 1.0, 1.0, 1.0) + t * vec4<f32>(0.5, 0.7, 1.0, 1.0);
 }
 
-@compute @workgroup_size(8, 8, 1)
+    @compute @workgroup_size(8, 8, 1)
 fn init(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_workgroups) num_workgroups: vec3<u32>) {
     let location = vec2<i32>(i32(invocation_id.x), i32(invocation_id.y));
 
@@ -89,7 +111,7 @@ fn init(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_wo
     textureStore(texture, location, color);
 }
 
-@compute @workgroup_size(8, 8, 1)
+    @compute @workgroup_size(8, 8, 1)
 fn update(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let location = vec2<i32>(i32(invocation_id.x), i32(invocation_id.y));
 
