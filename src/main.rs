@@ -3,7 +3,11 @@ use bevy::{
     render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
     window::WindowResolution,
 };
-use rt::{image::RtImage, plugin::RtPlugin};
+use rt::{
+    image::RtImage,
+    plugin::RtPlugin,
+    sphere::{Sphere, Spheres},
+};
 
 mod rt;
 
@@ -56,4 +60,11 @@ fn setup(mut commands: Commands, mut images: ResMut<Assets<Image>>) {
     commands.spawn(Camera2dBundle::default());
 
     commands.insert_resource(RtImage(image));
+
+    commands.insert_resource(Spheres {
+        spheres: vec![Sphere {
+            center: [0.0, 0.0, -1.0],
+            radius: 0.5,
+        }],
+    })
 }

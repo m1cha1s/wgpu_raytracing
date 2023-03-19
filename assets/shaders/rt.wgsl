@@ -13,7 +13,7 @@ struct Sphere {
 
 struct Spheres {
     sphere_count: u32,
-    spheres: array<Sphere>,
+    spheres: array<Sphere, 20>,
 }
 
 @group(0) @binding(1)

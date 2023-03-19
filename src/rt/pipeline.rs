@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem::size_of, num::NonZeroU64};
+use std::{borrow::Cow, mem::size_of};
 
 use bevy::{
     prelude::{AssetServer, FromWorld, Resource},
@@ -12,7 +12,7 @@ use bevy::{
     },
 };
 
-use super::sphere::{ExtractedSpheres, Sphere};
+use super::sphere::ExtractedSpheres;
 
 #[derive(Resource)]
 pub struct RtPipeline {
